@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  const { db } = await import("../../../..//lib/db");
+  const { db } = await import("../../../../lib/db");
   const opportunities = await db.opportunity.findMany({ orderBy: { createdAt: "desc" }, take: 20 });
   return NextResponse.json(opportunities);
 }
