@@ -15,9 +15,9 @@ export function executeMockTool(tool: string, args: Record<string, unknown>): Mo
     case "criar_evento":
       return { ok: true, message: "Evento criado no ambiente mock.", data: args };
     case "remarcar_evento":
-      return { ok: true, message: "Evento remarcado no ambiente mock.", data: args };
+      return { ok: true, message: "Evento remarcado e participantes notificados no ambiente mock.", data: args };
     case "cancelar_evento":
-      return { ok: true, message: "Evento cancelado no ambiente mock.", data: args };
+      return { ok: true, message: "Evento cancelado e participantes notificados no ambiente mock.", data: args };
     default:
       return { ok: false, message: `Ferramenta não permitida: ${tool}` };
   }
