@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum AutonomyLevel {
+  observe
+  advise
+  operate
+  autonomous
+}
+
+enum AgentStatus {
+  active
+  paused
+}
+
+enum TaskStatus {
+  pending
+  running
+  needs_approval
+  completed
+  failed
+}
+
+model Agent {
+  id               String        @id
+  name             String
+  role             String
+  systemPrompt     String
+  autonomyDefault  AutonomyLevel
+  allowedTools     String
+  status           AgentStatus   @default(active)
+  tasks            Task[]
+  actions          Action[]
+}
+
+model Task {
+  id          String      @id @default(cuid())
+  userInput   String
+  agentId     String
+  status      TaskStatus  @default(pending)
+  createdAt   DateTime    @default(now())
+  completedAt DateTime?
+  agent       Agent       @relation(fields: [agentId], references: [id])
+  actions     Action[]
+}
+
+model Action {
+  id               String        @id @default(cuid())
+  taskId           String
+  agentId          String
+  description      String
+  autonomyLevel    AutonomyLevel
+  requiresApproval Boolean       @default(false)
+  approved         Boolean?
+  executedAt       DateTime?
+  result           String?
+  task             Task          @relation(fields: [taskId], references: [id])
+  agent            Agent         @relation(fields: [agentId], references: [id])
+  auditLogs        AuditLog[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actionId  String?
+  actor     String
+  event     String
+  payload   String
+  timestamp DateTime @default(now())
+  action    Action? @relation(fields: [actionId], references: [id])
+}
