@@ -12,17 +12,26 @@ Think of it as thousands of digital arms: each agent owns a responsibility, has 
 
 **Owner → Orchestrator → Agents → Tasks → Tools → Verification → Report**
 
-Agents have:
-- Identity and role
-- Mission and expectations
-- Memory scope
-- Tools and integrations
-- Permission boundaries
-- Autonomy level
-- Parent/child relationships
-- Audit history
+Core runtime rule:
 
-### Autonomy levels
+**LLM proposes → Runtime enforces → Policy authorizes → Tool executes → Verification confirms → Audit records.**
+
+## MVP — Phase 1
+
+The first functional slice runs entirely in Next.js + TypeScript with SQLite/Prisma and Anthropic.
+
+- Command Center
+- Natural-language command routing
+- One specialized Mail & Calendar agent
+- Mock email/calendar tools
+- Hardcoded approval Policy Engine outside the LLM
+- Human approval queue
+- Audit log and readable activity feed
+- Single-user runtime
+
+No real Gmail/Outlook integration is connected yet.
+
+## Autonomy levels
 
 1. Observe — monitor only
 2. Advise — recommend actions
@@ -31,55 +40,60 @@ Agents have:
 
 Sensitive actions remain behind a human approval gate.
 
-## MVP
+## Architecture
 
-- Command Center
-- Workforce overview
-- Agent status and missions
-- Natural-language command box
-- Approval queue
-- Live activity feed
-- Dark operational UI
+```text
+Owner
+  ↓
+Next.js Command Center
+  ↓
+Orchestrator
+  ↓
+Mail & Calendar Agent
+  ↓
+Action Plan
+  ↓
+Hard Policy Engine
+  ├── ALLOW → Mock Tool → Verification → Audit
+  ├── APPROVAL → Human Gate → Mock Tool → Verification → Audit
+  └── DENY / ESCALATE
+```
 
-## Planned architecture
+The LLM is never the security boundary. Approval rules are enforced in application code before tool execution.
 
-- Next.js + TypeScript frontend
-- .NET API for domain and orchestration
-- PostgreSQL for durable state
-- Redis for queues, locks and realtime coordination
-- Provider-agnostic LLM gateway
-- Connector layer for email, calendar, banking, fitness and other tools
-- Audit/event stream
-- Human-in-the-loop approval service
+## Data model
 
-## Product principles
+SQLite via Prisma stores:
 
-- Human remains the owner and final authority.
-- Least privilege by default.
-- Every external action is auditable.
-- Agents are replaceable; responsibilities are durable.
-- Company/personal data is isolated by workspace and agent scope.
-- The system must explain what it is doing and why.
+- `Agent`
+- `Task`
+- `Action`
+- `AuditLog`
 
 ## Local development
 
 ```bash
 npm install
+cp .env.example .env
+npx prisma generate
+npx prisma db push
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open `http://localhost:3000`.
 
-## Roadmap
+Set `ANTHROPIC_API_KEY` to enable Anthropic classification. Without a key, the MVP uses a deterministic local fallback so the approval/audit flow can still be exercised.
 
-- [ ] Persistent agent registry
-- [ ] Agent Builder
-- [ ] Task engine
-- [ ] Mission planner
-- [ ] Memory service
-- [ ] Connector SDK
-- [ ] Approval policies
-- [ ] .NET orchestration API
-- [ ] PostgreSQL + Redis
-- [ ] Realtime event stream
-- [ ] Multi-device command center
+## Phase 2
+
+The following remain deliberately outside the MVP:
+
+- Real Gmail/Outlook connectors
+- Additional agents
+- Authentication and multi-user workspaces
+- Persistent memory service
+- .NET orchestration API
+- PostgreSQL
+- Redis
+- Realtime event infrastructure
+- Voice, image and file inputs
