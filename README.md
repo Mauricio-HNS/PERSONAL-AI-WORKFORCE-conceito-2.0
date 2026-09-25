@@ -1,74 +1,68 @@
-# Personal AI Workforce
+# Personal AI Workforce — Financial Rescue
 
-A personal operating system for a digital workforce of AI agents.
+A personal financial recovery operating system powered by specialized AI agents.
 
-## Vision
+## Product
 
-This is not a chatbot with a few shortcuts. The product is designed as a command center where a person can build, supervise and coordinate a persistent workforce of specialized AI agents.
+**Financial Rescue** is the first vertical of the Personal AI Workforce. Its mission is to help a person move from financial pressure toward positive cash flow, debt control and increased income.
 
-Think of it as thousands of digital arms: each agent owns a responsibility, has explicit permissions, remembers its context, reports its work and escalates decisions that require the human.
+The system follows:
 
-## Core model
+**Understand → Detect → Calculate → Plan → Ask → Execute → Verify → Measure**
 
-**Owner → Orchestrator → Agents → Tasks → Tools → Verification → Report**
+The AI does not move money or make irreversible financial decisions on its own.
 
-Core runtime rule:
+## Current MVP
 
-**LLM proposes → Runtime enforces → Policy authorizes → Tool executes → Verification confirms → Audit records.**
+- Financial Rescue Center dashboard
+- Monthly income, expenses, debt and recurring-cost intake
+- Financial health calculation
+- AI-style recovery opportunity engine
+- Savings opportunities
+- Income-growth opportunities
+- Debt-reduction planning candidates
+- Opportunity persistence with Prisma/SQLite
+- Confidence and estimated-value tracking
+- Explicit human authorization boundary
 
-## MVP — Phase 1
+## Product direction
 
-The first functional slice runs entirely in Next.js + TypeScript with SQLite/Prisma and Anthropic.
+The core metric is not the number of AI tasks completed. It is measurable financial progress:
 
-- Command Center
-- Natural-language command routing
-- One specialized Mail & Calendar agent
-- Mock email/calendar tools
-- Hardcoded approval Policy Engine outside the LLM
-- Human approval queue
-- Audit log and readable activity feed
-- Single-user runtime
-
-No real Gmail/Outlook integration is connected yet.
-
-## Autonomy levels
-
-1. Observe — monitor only
-2. Advise — recommend actions
-3. Operate — execute allowed actions
-4. Autonomous — execute within a defined contract
-
-Sensitive actions remain behind a human approval gate.
+- Monthly balance
+- Potential savings identified
+- Additional income opportunities identified
+- Debt reduction opportunities
+- Verified value recovered/generated
 
 ## Architecture
 
 ```text
 Owner
   ↓
-Next.js Command Center
+Financial Rescue Center
   ↓
-Orchestrator
+Rescue Orchestrator
   ↓
-Mail & Calendar Agent
+Specialized Financial Agents
+  ├── Expense Recovery
+  ├── Income Hunter
+  └── Debt Strategy
   ↓
-Action Plan
+Policy / Human Approval
   ↓
-Hard Policy Engine
-  ├── ALLOW → Mock Tool → Verification → Audit
-  ├── APPROVAL → Human Gate → Mock Tool → Verification → Audit
-  └── DENY / ESCALATE
+Authorized Tools
+  ↓
+Verification
+  ↓
+Financial ROI Ledger
 ```
 
-The LLM is never the security boundary. Approval rules are enforced in application code before tool execution.
+The existing Personal AI Workforce kernel remains the foundation: agents, tasks, actions, policy gates and auditability.
 
-## Data model
+## Safety boundary
 
-SQLite via Prisma stores:
-
-- `Agent`
-- `Task`
-- `Action`
-- `AuditLog`
+The MVP generates estimates and action candidates. It does not transfer money, sign contracts, contact creditors, or make regulated financial decisions without explicit user authorization and the appropriate professional/service integration.
 
 ## Local development
 
@@ -82,18 +76,19 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-Set `ANTHROPIC_API_KEY` to enable Anthropic classification. Without a key, the MVP uses a deterministic local fallback so the approval/audit flow can still be exercised.
+## Roadmap
 
-## Phase 2
+### Phase 1 — Rescue Kernel
+Financial profile, opportunity detection, recovery plan and value tracking.
 
-The following remain deliberately outside the MVP:
+### Phase 2 — Authorized Connectors
+Bank/account data, bills, subscriptions, employment data and other user-authorized sources.
 
-- Real Gmail/Outlook connectors
-- Additional agents
-- Authentication and multi-user workspaces
-- Persistent memory service
-- .NET orchestration API
-- PostgreSQL
-- Redis
-- Realtime event infrastructure
-- Voice, image and file inputs
+### Phase 3 — Execution Workforce
+Specialized agents prepare and execute approved actions through explicit tool permissions.
+
+### Phase 4 — Recovery Loop
+The system verifies outcomes, updates the financial model and continuously searches for the next improvement.
+
+### Phase 5 — Personal Financial Operating System
+Goals, missions, recurring monitoring, scenario planning and a long-term financial recovery ledger.
