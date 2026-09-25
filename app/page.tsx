@@ -1,25 +1,86 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { Activity, Bot, CheckCircle2, ChevronLeft, ChevronRight, Command, Inbox, LayoutDashboard, ShieldCheck, Users, Zap } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight, Bot, CreditCard, LayoutDashboard, ShieldCheck, Target, Wallet, Zap } from "lucide-react";
 
-type Approval = { id:string; description:string; task:{userInput:string}; autonomyLevel:string };
-type Feed = { id:string; event:string; actor:string; timestamp:string; description:string };
+type Opportunity = { id:string; title:string; category:string; description:string; estimatedValue:number; confidence:number; status:string };
 
-export default function Home(){
- const [command,setCommand]=useState(""); const [result,setResult]=useState<any>(null); const [busy,setBusy]=useState(false); const [collapsed,setCollapsed]=useState(false); const [approvals,setApprovals]=useState<Approval[]>([]); const [feed,setFeed]=useState<Feed[]>([]);
- const refresh=async()=>{const [a,f]=await Promise.all([fetch("/api/approvals"),fetch("/api/activity")]); setApprovals(await a.json()); setFeed(await f.json());};
- useEffect(()=>{refresh()},[]);
- const execute=async()=>{if(!command.trim()||busy)return; setBusy(true); setResult(null); try{const r=await fetch("/api/command",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input:command})}); setResult(await r.json()); setCommand(""); await refresh();}finally{setBusy(false)}};
- const approve=async(id:string,approved:boolean)=>{await fetch("/api/approvals",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({actionId:id,approved})}); await refresh(); setResult({status:approved?"approved":"rejected",message:approved?"Ação aprovada e executada no ambiente mock.":"Ação rejeitada."});};
- return <main className="shell">
-  <aside className={collapsed?"sidebar collapsed":"sidebar"}><div className="brand"><div className="brandMark">W</div>{!collapsed&&<div><strong>PERSONAL AI</strong><span>WORKFORCE</span></div>}</div><nav><button className="navItem active"><LayoutDashboard size={18}/>{!collapsed&&<span>Command Center</span>}</button><button className="navItem"><Users size={18}/>{!collapsed&&<span>My Workforce</span>}</button><button className="navItem"><CheckCircle2 size={18}/>{!collapsed&&<span>Tasks</span>}</button><button className="navItem"><ShieldCheck size={18}/>{!collapsed&&<span>Approvals</span>}{!collapsed&&approvals.length>0&&<b>{approvals.length}</b>}</button><button className="navItem"><Activity size={18}/>{!collapsed&&<span>Activity</span>}</button></nav><div className="sidebarBottom"><button className="collapse" onClick={()=>setCollapsed(!collapsed)}>{collapsed?<ChevronRight size={18}/>:<><ChevronLeft size={18}/><span>Collapse</span></>}</button></div></aside>
-  <section className="content"><header><div><div className="eyebrow">PERSONAL AI WORKFORCE · MVP</div><h1>Command Center</h1></div><div className="profile"><div className="online"/><div className="avatar">MH</div><div className="profileText"><strong>Mauricio</strong><span>Owner</span></div></div></header>
-   <div className="commandBox"><Command size={20}/><input value={command} onChange={e=>setCommand(e.target.value)} onKeyDown={e=>e.key==="Enter"&&execute()} placeholder="Diga ao seu workforce o que precisa acontecer..."/><button onClick={execute} disabled={busy}><Zap size={16}/>{busy?"Running":"Execute"}</button></div>
-   {result&&<div className="toast"><CheckCircle2 size={17}/><span><strong>{result.status}</strong> — {result.message}</span></div>}
-   <div className="metrics"><Metric icon={<Users/>} label="Agents" value="1" sub="Mail & Calendar"/><Metric icon={<Inbox/>} label="Pending approvals" value={String(approvals.length)} sub="human decision required"/><Metric icon={<Activity/>} label="Audit events" value={String(feed.length)} sub="latest 50"/><Metric icon={<Bot/>} label="Runtime" value="ONLINE" sub="Next.js MVP"/></div>
-   <div className="grid"><section className="panel workforce"><div className="panelHead"><div><span className="sectionLabel">WORKFORCE</span><h2>Active agent</h2></div></div><div className="agent"><div className="agentIcon purple"><Bot size={19}/></div><div className="agentMain"><div className="agentTitle"><strong>Mail</strong><span>Email & Calendar Operations</span></div><p>Specialized agent with mock email/calendar tools and hard policy gates.</p></div><div className="status working"><i/>Active</div></div></section>
-    <section className="panel approvals"><div className="panelHead"><div><span className="sectionLabel">HUMAN GATE</span><h2>Approval queue</h2></div><span className="count">{approvals.length}</span></div>{approvals.length===0?<div className="empty">Nenhuma ação aguardando aprovação.</div>:approvals.map(a=><div className="approval" key={a.id}><ShieldCheck size={17}/><div><strong>{a.description}</strong><small>{a.autonomyLevel} · {a.task.userInput}</small></div><button onClick={()=>approve(a.id,true)}>Approve</button><button onClick={()=>approve(a.id,false)}>Reject</button></div>)}</section></div>
-   <section className="panel activity"><div className="panelHead"><div><span className="sectionLabel">AUDIT STREAM</span><h2>Workforce activity</h2></div><Activity size={18}/></div>{feed.length===0?<div className="empty">Nenhum evento ainda. Execute um comando.</div>:feed.map(x=><div className="feed" key={x.id}><span className="feedDot"/><div><strong>{x.description}</strong><small>{x.actor} · {new Date(x.timestamp).toLocaleString("pt-PT")}</small></div></div>)}</section>
-  </section></main>
+export default function Home() {
+  const [income,setIncome]=useState("");
+  const [expenses,setExpenses]=useState("");
+  const [debt,setDebt]=useState("");
+  const [recurring,setRecurring]=useState("");
+  const [busy,setBusy]=useState(false);
+  const [result,setResult]=useState<any>(null);
+  const [opportunities,setOpportunities]=useState<Opportunity[]>([]);
+
+  const load=async()=>{ const r=await fetch("/api/rescue"); if(r.ok)setOpportunities(await r.json()); };
+  useEffect(()=>{load()},[]);
+
+  const rescue=async()=>{
+    setBusy(true); setResult(null);
+    try {
+      const r=await fetch("/api/rescue",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        income:Number(income), expenses:Number(expenses), debt:Number(debt||0), recurringCosts:Number(recurring||0)
+      })});
+      const data=await r.json(); setResult(data); if(r.ok) setOpportunities(data.opportunities.map((x:any,i:number)=>({...x,id:String(i),status:"detected"})));
+    } finally { setBusy(false); }
+  };
+
+  const balance=result?.monthlyBalance ?? (Number(income||0)-Number(expenses||0));
+  const recovery=result?.recoveryPotential ?? 0;
+  const incomePotential=result?.incomePotential ?? 0;
+
+  return <main className="shell">
+    <aside className="sidebar">
+      <div className="brand"><div className="brandMark">R</div><div><strong>FINANCIAL</strong><span>RESCUE AI</span></div></div>
+      <nav>
+        <button className="navItem active"><LayoutDashboard size={18}/><span>Rescue Center</span></button>
+        <button className="navItem"><Wallet size={18}/><span>Financial Health</span></button>
+        <button className="navItem"><Target size={18}/><span>Recovery Plan</span></button>
+        <button className="navItem"><ShieldCheck size={18}/><span>Approvals</span></button>
+        <button className="navItem"><Activity size={18}/><span>Activity</span></button>
+      </nav>
+      <div className="sidebarBottom"><small style={{color:"#60777d"}}>PERSONAL AI WORKFORCE · 0.3</small></div>
+    </aside>
+
+    <section className="content">
+      <header><div><div className="eyebrow">PERSONAL AI WORKFORCE · FINANCIAL RESCUE</div><h1>Financial Rescue Center</h1></div><div className="profile"><div className="online"/><div className="avatar">MH</div><div className="profileText"><strong>Mauricio</strong><span>Owner</span></div></div></header>
+
+      <section className="hero panel">
+        <div><span className="sectionLabel">MISSION</span><h2>Get out of financial pressure.</h2><p>Analyze the current situation, find possible savings and identify realistic paths to increase income.</p></div>
+        <div className="heroIcon"><Bot size={34}/></div>
+      </section>
+
+      <section className="panel formPanel">
+        <div className="panelHead"><div><span className="sectionLabel">START WITH THE NUMBERS</span><h2>Your monthly picture</h2></div><span className="status working"><i/>Private analysis</span></div>
+        <div className="financeForm">
+          <label><span>Monthly income</span><input type="number" min="0" value={income} onChange={e=>setIncome(e.target.value)} placeholder="€ 2,500"/></label>
+          <label><span>Monthly expenses</span><input type="number" min="0" value={expenses} onChange={e=>setExpenses(e.target.value)} placeholder="€ 2,700"/></label>
+          <label><span>Total debt</span><input type="number" min="0" value={debt} onChange={e=>setDebt(e.target.value)} placeholder="€ 8,000"/></label>
+          <label><span>Recurring costs</span><input type="number" min="0" value={recurring} onChange={e=>setRecurring(e.target.value)} placeholder="€ 500"/></label>
+          <button className="rescueButton" onClick={rescue} disabled={busy||!income||!expenses}><Zap size={17}/>{busy?"Analyzing...":"Run Financial Rescue"}</button>
+        </div>
+      </section>
+
+      <div className="metrics">
+        <Metric icon={<Wallet/>} label="Monthly balance" value={format(balance)} sub={balance>=0?"positive cash flow":"monthly deficit"}/>
+        <Metric icon={<ArrowDownRight/>} label="Recovery potential" value={format(recovery)} sub="estimated savings"/>
+        <Metric icon={<ArrowUpRight/>} label="Income potential" value={format(incomePotential)} sub="estimated additional income"/>
+        <Metric icon={<CreditCard/>} label="Debt" value={format(result?.debt ?? Number(debt||0))} sub="reported total"/>
+      </div>
+
+      {result?.error && <div className="toast error">{result.error}</div>}
+      <section className="panel">
+        <div className="panelHead"><div><span className="sectionLabel">AI OPPORTUNITY RADAR</span><h2>Where money can move</h2></div><span className="count">{opportunities.length}</span></div>
+        {opportunities.length===0 ? <div className="empty">Run the rescue analysis to generate the first recovery opportunities.</div> :
+          opportunities.map(o=><div className="opportunity" key={o.id}><div className={"oppIcon "+o.category}><Target size={18}/></div><div className="oppMain"><strong>{o.title}</strong><p>{o.description}</p><small>{Math.round(o.confidence*100)}% confidence · {o.status}</small></div><div className="oppValue">€ {o.estimatedValue.toFixed(0)}<small>potential</small></div></div>)}
+      </section>
+
+      <div className="disclaimer">The Rescue engine produces estimates and action candidates. It does not move money, negotiate contracts, or make financial decisions without explicit authorization.</div>
+    </section>
+  </main>
 }
+
+function format(value:number){return "€ "+Number(value||0).toLocaleString("en-IE",{minimumFractionDigits:0,maximumFractionDigits:0})}
 function Metric({icon,label,value,sub}:{icon:React.ReactNode;label:string;value:string;sub:string}){return <div className="metric"><div className="metricIcon">{icon}</div><div><span>{label}</span><strong>{value}</strong><small>{sub}</small></div></div>}
