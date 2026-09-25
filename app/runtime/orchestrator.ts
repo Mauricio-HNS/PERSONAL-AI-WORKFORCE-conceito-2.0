@@ -15,12 +15,7 @@ async function llmJson(system: string, input: string): Promise<any | null> {
   try { return JSON.parse(text.replace(/^```json\s*/, "").replace(/\s*```$/, "")); } catch { return null; }
 }
 
-function routeFallback(input: string) {
-  const email = /email|e-mail|mensagem|responda|caixa de entrada|inbox/i.test(input);
-  const calendar = /reunião|reuniao|agenda|evento|horário|horario|compromisso|participantes/i.test(input);
-  return email || calendar ? "email-calendar" : null;
-}
-
+function routeFallback(input: string) { return /email|e-mail|mensagem|responda|caixa de entrada|inbox|reunião|reuniao|agenda|evento|horário|horario|compromisso|participantes/i.test(input) ? "email-calendar" : null; }
 function agentFallback(input: string) {
   const lower = input.toLowerCase();
   if (/cancele|cancelar|cancela/.test(lower)) return { tool: "cancelar_evento", autonomyLevel: "operate", description: input, args: { participantCount: /5|seis|6/.test(lower) ? 5 : 3 } };
@@ -30,14 +25,14 @@ function agentFallback(input: string) {
   return { tool: "ler_agenda", autonomyLevel: "observe", description: input, args: {} };
 }
 
-async function audit(actionId: string | null, event: string, payload: unknown) {
-  await db.auditLog.create({ data: { actionId, actor: "agent", event, payload: JSON.stringify(payload) } });
+async function audit(actionId: string | null, event: string, payload: unknown, actor = "agent") {
+  await db.auditLog.create({ data: { actionId, actor, event, payload: JSON.stringify(payload) } });
 }
 
 export async function handleCommand(userInput: string) {
   const agent = await db.agent.upsert({ where: { id: "email-calendar" }, update: {}, create: { id: "email-calendar", name: "Mail", role: "Email & Calendar Operations", systemPrompt: emailCalendarSystemPrompt(userName), autonomyDefault: "operate", allowedTools: JSON.stringify(["ler_emails", "rascunhar_email", "enviar_email", "ler_agenda", "criar_evento", "remarcar_evento", "cancelar_evento"]) } });
   const task = await db.task.create({ data: { userInput, agentId: agent.id, status: "pending" } });
-  await audit(null, "command_received", { taskId: task.id, userInput });
+  await audit(null, "command_received", { taskId: task.id, userInput }, "user");
 
   const route = await llmJson(orchestratorPrompt([agent.id]), userInput) ?? { agente: routeFallback(userInput), resumo_da_tarefa: userInput, justificativa: "Classificação local de fallback." };
   await audit(null, "routed", route);
@@ -70,7 +65,7 @@ export async function approveAction(actionId: string, approved: boolean) {
   const action = await db.action.findUnique({ where: { id: actionId }, include: { task: true } });
   if (!action) throw new Error("Action not found");
   if (!action.requiresApproval || action.approved !== null) throw new Error("Action is not awaiting approval");
-  await audit(action.id, approved ? "approval_granted" : "approval_rejected", { actor: "user" });
+  await audit(action.id, approved ? "approval_granted" : "approval_rejected", { actor: "user" }, "user");
   if (!approved) {
     await db.action.update({ where: { id: action.id }, data: { approved: false } });
     await db.task.update({ where: { id: action.taskId }, data: { status: "failed", completedAt: new Date() } });
