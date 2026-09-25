@@ -7,61 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum AutonomyLevel {
-  observe
-  advise
-  operate
-  autonomous
-}
-
-enum AgentStatus {
-  active
-  paused
-}
-
-enum TaskStatus {
-  pending
-  running
-  needs_approval
-  completed
-  failed
-}
-
 model Agent {
-  id               String        @id
+  id               String   @id
   name             String
   role             String
   systemPrompt     String
-  autonomyDefault  AutonomyLevel
+  autonomyDefault  String
   allowedTools     String
-  status           AgentStatus   @default(active)
+  status           String   @default("active")
   tasks            Task[]
   actions          Action[]
 }
 
 model Task {
-  id          String      @id @default(cuid())
+  id          String    @id @default(cuid())
   userInput   String
   agentId     String
-  status      TaskStatus  @default(pending)
-  createdAt   DateTime    @default(now())
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now())
   completedAt DateTime?
-  agent       Agent       @relation(fields: [agentId], references: [id])
+  agent       Agent     @relation(fields: [agentId], references: [id])
   actions     Action[]
 }
 
 model Action {
-  id               String        @id @default(cuid())
+  id               String     @id @default(cuid())
   taskId           String
   agentId          String
   description      String
-  autonomyLevel    AutonomyLevel
-  requiresApproval Boolean       @default(false)
+  autonomyLevel    String
+  requiresApproval Boolean    @default(false)
   approved         Boolean?
   executedAt       DateTime?
   result           String?
-  task             Task          @relation(fields: [taskId], references: [id])
-  agent            Agent         @relation(fields: [agentId], references: [id])
+  task             Task       @relation(fields: [taskId], references: [id])
+  agent            Agent      @relation(fields: [agentId], references: [id])
   auditLogs        AuditLog[]
 }
 
