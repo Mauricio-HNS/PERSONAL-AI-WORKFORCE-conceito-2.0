@@ -17,6 +17,7 @@ model Agent {
   status           String   @default("active")
   tasks            Task[]
   actions          Action[]
+  opportunities    Opportunity[]
 }
 
 model Task {
@@ -28,6 +29,7 @@ model Task {
   completedAt DateTime?
   agent       Agent     @relation(fields: [agentId], references: [id])
   actions     Action[]
+  opportunities Opportunity[]
 }
 
 model Action {
@@ -53,4 +55,22 @@ model AuditLog {
   payload   String
   timestamp DateTime @default(now())
   action    Action? @relation(fields: [actionId], references: [id])
+}
+
+model Opportunity {
+  id             String    @id @default(cuid())
+  title          String
+  category       String
+  description    String
+  estimatedValue Float
+  confidence     Float
+  status         String    @default("detected")
+  source         String
+  evidence       String
+  createdAt      DateTime  @default(now())
+  verifiedValue  Float?
+  agentId        String
+  taskId         String?
+  agent           Agent    @relation(fields: [agentId], references: [id])
+  task            Task?    @relation(fields: [taskId], references: [id])
 }
